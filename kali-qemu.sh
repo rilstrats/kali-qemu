@@ -1,6 +1,7 @@
 #!/bin/env bash
 POOL="/var/lib/libvirt/images"
-DL_PREFIX="$HOME/Downloads"
+# DL_PREFIX="$HOME/Downloads"
+DL_PREFIX="/tmp"
 
 validate_version() {
 	if [[ ! $1 =~ 20[0-9]{2}\.[1-4] ]]; then
@@ -100,22 +101,29 @@ cache_sudo() {
 }
 
 edit_image() {
+	sudo virsh snapshot-list $DOMAIN | grep custom > /dev/null && return
 	FSTAB_LINE="cyber /cyber virtiofs defaults,nofail 0 0"
+	COMMAND="grep -qF '$FSTAB_LINE' /etc/fstab || echo '$FSTAB_LINE' >> /etc/fstab"
 	virt-customize -a $IMAGE_PATH \
 		--mkdir /cyber \
 		--chmod 1777:/cyber \
-		--run-command "grep -qF \"$FSTAB_LINE\" /etc/fstab || echo \"$FSTAB_LINE\" >> /etc/fstab" \
-		--copy-in resize:/usr/local/bin \
-		--copy-in mountcyber:/usr/local/bin
+		--run-command "$COMMAND" \
+		--copy-in bin/resize:/usr/local/bin \
+		--copy-in bin/mountcyber:/usr/local/bin
+	snapshot_vm custom
 }
 
 create_vm() {
-	sed "s/kali-20XX.X/$DOMAIN/g" kali.xml > "$DL_DIR/$DOMAIN.xml"
+	sudo virsh list --all | grep $DOMAIN > /dev/null && return
+	sed "s/kali-20XX.X/$DOMAIN/g" kali.xml > \
+		"$DL_DIR/$DOMAIN.xml"
 	sudo virsh define $DL_DIR/$DOMAIN.xml
+	snapshot_vm original
 }
 
 snapshot_vm() {
-	sudo virsh snapshot-create-as --domain $DOMAIN --name "$1"
+	sudo virsh snapshot-list $DOMAIN | grep "$1" > /dev/null && return
+	sudo virsh snapshot-create-as $DOMAIN "$1"
 }
 
 main() {
@@ -123,9 +131,7 @@ main() {
 	get_version
 	fetch_image
 	create_vm
-	snapshot_vm original
 	edit_image
-	snapshot_vm custom
 }
 
 main "$@"
