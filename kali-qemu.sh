@@ -71,6 +71,14 @@ extract_zip() {
 	7z x "-o$DL_DIR" "$DL_DIR/$ZIP"
 }
 
+extract_zip_to_pool() {
+	if [[ -f "$DL_DIR/$IMAGE" ]]; then
+		return
+	fi
+	sudo 7z x "-o$POOL" "$DL_DIR/$ZIP"
+	sudo mv "$POOL/$IMAGE" $IMAGE_PATH
+}
+
 check_image_in_pool() {
 	if [[ -f "$IMAGE_PATH" ]]; then
 		echo "Kali $VERSION already exists: $IMAGE_PATH"
@@ -91,8 +99,9 @@ fetch_image() {
 			downgrade_version
 			continue
 		}
-		extract_zip
-		copy_image_to_pool
+		extract_zip_to_pool
+		# extract_zip
+		# copy_image_to_pool
 	done
 }
 
@@ -107,7 +116,7 @@ edit_image() {
 	sudo virsh snapshot-list $DOMAIN | grep custom > /dev/null && return
 	FSTAB_LINE="cyber /cyber virtiofs defaults,nofail 0 0"
 	COMMAND="grep -qF '$FSTAB_LINE' /etc/fstab || echo '$FSTAB_LINE' >> /etc/fstab"
-	virt-customize -a $IMAGE_PATH \
+	sudo virt-customize -a $IMAGE_PATH \
 		--mkdir /cyber \
 		--chmod 1777:/cyber \
 		--run-command "$COMMAND" \
