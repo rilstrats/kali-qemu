@@ -1,7 +1,10 @@
 #!/bin/env bash
 POOL="/var/lib/libvirt/images"
-# DL_PREFIX="$HOME/Downloads"
-DL_PREFIX="/tmp"
+DL_PREFIX="$HOME/Downloads"
+# DL_PREFIX="/tmp"
+
+# fail if there is an error
+set -e
 
 validate_version() {
 	if [[ ! $1 =~ 20[0-9]{2}\.[1-4] ]]; then
