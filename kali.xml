@@ -1,6 +1,5 @@
 <domain type='kvm'>
   <name>kali-20XX.X</name>
-  <uuid>3037b2e7-1b70-4e27-8406-e8bc8bc5d7a1</uuid>
   <metadata>
     <libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
       <libosinfo:os id="http://debian.org/debian/testing"/>
